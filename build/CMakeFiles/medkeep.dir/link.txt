@@ -1,0 +1,2 @@
+/usr/bin/ar qc libmedkeep.a CMakeFiles/medkeep.dir/src/medkeep.cpp.o
+/usr/bin/ranlib libmedkeep.a
