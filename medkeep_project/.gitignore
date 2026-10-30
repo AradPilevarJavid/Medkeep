@@ -1,0 +1,5 @@
+/build/
+medkeep.db
+medkeep.db.tmp
+*.db
+*.db.tmp
