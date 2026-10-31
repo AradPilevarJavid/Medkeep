@@ -23,3 +23,4 @@ if(BUILD_TESTING)
     target_compile_options(medkeep_tests PRIVATE -Wall -Wextra -Wpedantic)
     add_test(NAME medkeep_tests COMMAND medkeep_tests)
 endif()
+
