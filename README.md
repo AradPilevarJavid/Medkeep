@@ -7,13 +7,13 @@ MedKeep is an offline medical-record logging application written in C++17. It im
 1. **Singly linked hash chain**
    - The chain is built from manually allocated nodes connected through a `previous` pointer (`std::unique_ptr<Node>`).
    - Every record is represented by two consecutive nodes: a record node and a hash node.
-   - A hash node stores the SHA-256 digest associated with its record node. The newest hash node is the head of the list.
-   - The first record uses an empty previous digest.
+   - A hash node stores the custom FNV-1a 64-bit hash associated with its record node. The newest hash node is the head of the list.
+   - The first record uses an empty previous hash.
 
 2. **Integrity verification and extraction**
    - Verification walks from the newest hash node toward the oldest node.
-   - It checks the expected `Hash -> Record -> Hash` structure, matching IDs, and every stored digest.
-   - The digest is recalculated from the previous digest, record ID, content length, and content.
+   - It checks the expected `Hash -> Record -> Hash` structure, matching IDs, and every stored hash.
+   - The hash is recalculated from the previous hash, record ID, content length, and content.
    - Records are returned only if the entire chain is valid. The returned records are in chronological order.
 
 3. **Request queue**
@@ -24,7 +24,7 @@ MedKeep is an offline medical-record logging application written in C++17. It im
 4. **Persistence**
    - The application saves committed records and pending requests to a local archive file.
    - Content is hex-encoded in the archive so newlines, tabs, and arbitrary UTF-8 bytes are preserved.
-   - Loading preserves stored digests as they are; it does not silently repair a modified chain.
+   - Loading preserves stored hashes as they are; it does not silently repair a modified chain.
    - The archive is written to a temporary file and then renamed into place.
 
 5. **Low-level language bonus**
@@ -32,24 +32,25 @@ MedKeep is an offline medical-record logging application written in C++17. It im
 
 ## Hash construction
 
-The project brief permits SHA-256 from a library. MedKeep uses OpenSSL's SHA-256 implementation. For each record it hashes this unambiguous byte sequence:
+MedKeep implements the FNV-1a 64-bit hash directly in C++ without a hashing library. For each record it hashes this byte sequence:
 
 ```text
-"MedKeep/SHA256/v1" || 0x00 || previous_digest || record_id_be || content_length_be || content
+"MedKeep/FNV1a64/v1\0" || previous_hash || record_id_be || content_length_be || content
 ```
 
-`record_id_be` and `content_length_be` are each encoded as eight-byte big-endian unsigned integers. Including a domain/version marker and fixed-width fields avoids ambiguous concatenations. The resulting 32-byte digest is stored as 64 lowercase hexadecimal characters.
+The implementation starts with the 64-bit FNV offset basis. For every byte, it XORs the byte into the hash and multiplies by the FNV prime using unsigned 64-bit arithmetic. `record_id_be` and `content_length_be` are each encoded as eight-byte big-endian unsigned integers. The final 64-bit value is stored as 16 lowercase hexadecimal characters. The archive header is `MEDKEEP	2` for this hash format.
+
+FNV-1a is simple and suitable for demonstrating a self-implemented hash function in this data-structures project, but it is **not cryptographically secure**. Its 64-bit output provides less collision resistance than SHA-256, and the algorithm is not designed to resist deliberate collision attempts. It must not be used to protect real medical records or other security-sensitive data.
 
 ## Build requirements
 
 - A C++17 compiler
 - CMake 3.16 or newer
-- OpenSSL development headers and library
 
 On Arch Linux:
 
 ```bash
-sudo pacman -S --needed base-devel cmake openssl
+sudo pacman -S --needed base-devel cmake
 ```
 
 Build:
@@ -109,7 +110,7 @@ Each record adds two linked-list nodes. The record node points to the previous h
 
 ## Important security limitation
 
-A hash chain detects content changes when the stored subsequent hashes are left unchanged. SHA-256 alone does not authenticate the archive: someone who can rewrite the entire file can recalculate every digest. A production medical system would also need authenticated checkpoints or digital signatures, access control, encryption at rest and in transit, audit logging, and appropriate privacy protections. This project is an educational data-structures implementation, not a clinical record system.
+A hash chain detects content changes when the stored subsequent hashes are left unchanged. FNV-1a is not cryptographically secure and does not authenticate the archive: someone who can rewrite the entire file can recalculate every digest. A production medical system would also need authenticated checkpoints or digital signatures, access control, encryption at rest and in transit, audit logging, and appropriate privacy protections. This project is an educational data-structures implementation, not a clinical record system.
 
 ## Interpretation of the mutable-node note
 

@@ -148,7 +148,7 @@ int main(int argc, char* argv[]) {
                               << " record(s) in chronological order.\n";
                     for (const medkeep::Record& record : records) {
                         std::cout << "\nRecord #" << record.id << "\n"
-                                  << "SHA-256: " << record.digest << '\n'
+                                  << "FNV-1a 64-bit: " << record.digest << '\n'
                                   << record.content << '\n';
                     }
                 }

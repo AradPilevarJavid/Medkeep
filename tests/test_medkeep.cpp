@@ -23,6 +23,23 @@ std::filesystem::path temporary_path(const std::string& name) {
                 static_cast<unsigned long long>(std::hash<std::string>{}(name))) + ".db");
 }
 
+void test_old_archive_version_is_rejected() {
+    const auto path = temporary_path("old_archive_version");
+    {
+        std::ofstream output(path, std::ios::binary | std::ios::trunc);
+        output << "MEDKEEP\t1\n";
+    }
+
+    bool rejected = false;
+    try {
+        (void)medkeep::MedKeep::load(path.string());
+    } catch (const std::runtime_error&) {
+        rejected = true;
+    }
+    require(rejected);
+    std::filesystem::remove(path);
+}
+
 void test_empty_chain() {
     medkeep::MedKeep application;
     std::string error;
@@ -52,7 +69,8 @@ void test_fifo_and_hash_chain() {
     require(records[0].id == 1 && records[0].content == "first patient");
     require(records[1].id == 2 && records[1].content == "second patient");
     require(records[2].id == 3 && records[2].content == "third patient");
-    require(records[0].digest.size() == 64);
+    require(records[0].digest == "30d909a7a87b317c");
+    require(records[0].digest.size() == 16);
 }
 
 void test_queue_preserves_fifo_order() {
@@ -212,6 +230,7 @@ void test_earlier_hash_tampering_breaks_later_link() {
 }  // namespace
 
 int main() {
+    test_old_archive_version_is_rejected();
     test_empty_chain();
     test_fifo_and_hash_chain();
     test_queue_preserves_fifo_order();

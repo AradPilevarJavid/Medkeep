@@ -1,9 +1,6 @@
 #include "medkeep.hpp"
 
-#include <openssl/evp.h>
-
 #include <algorithm>
-#include <array>
 #include <cctype>
 #include <filesystem>
 #include <fstream>
@@ -17,44 +14,44 @@
 namespace medkeep {
 namespace {
 
-std::string sha256_hex(const std::string& input) {
-    std::array<unsigned char, EVP_MAX_MD_SIZE> digest{};
-    unsigned int digest_length = 0;
-
-    const int result = EVP_Digest(input.data(), input.size(), digest.data(),
-                                  &digest_length, EVP_sha256(), nullptr);
-    if (result != 1 || digest_length != 32) {
-        throw std::runtime_error("OpenSSL could not calculate SHA-256.");
-    }
-
-    static constexpr char hex_digits[] = "0123456789abcdef";
-    std::string output;
-    output.reserve(digest_length * 2);
-    for (unsigned int i = 0; i < digest_length; ++i) {
-        output.push_back(hex_digits[digest[i] >> 4U]);
-        output.push_back(hex_digits[digest[i] & 0x0FU]);
-    }
-    return output;
-}
-
 std::string calculate_record_hash(const std::string& previous_digest,
                                   std::uint64_t id,
                                   const std::string& content) {
-    std::string payload = "MedKeep/SHA256/v1";
-    payload.push_back('\0');
-    payload.append(previous_digest);
+    constexpr std::uint64_t offset_basis = 14695981039346656037ULL;
+    constexpr std::uint64_t prime = 1099511628211ULL;
+    constexpr char domain[] = "MedKeep/FNV1a64/v1";
+    static constexpr char hex_digits[] = "0123456789abcdef";
 
+    std::uint64_t hash = offset_basis;
+    const auto add_byte = [&hash](unsigned char byte) {
+        hash ^= byte;
+        hash *= prime;
+    };
+
+    for (const unsigned char byte : domain) {
+        add_byte(byte);
+    }
+    for (const unsigned char byte : previous_digest) {
+        add_byte(byte);
+    }
     for (int shift = 56; shift >= 0; shift -= 8) {
-        payload.push_back(static_cast<char>((id >> shift) & 0xFFU));
+        add_byte(static_cast<unsigned char>((id >> shift) & 0xFFU));
     }
 
     const auto content_size = static_cast<std::uint64_t>(content.size());
     for (int shift = 56; shift >= 0; shift -= 8) {
-        payload.push_back(static_cast<char>((content_size >> shift) & 0xFFU));
+        add_byte(static_cast<unsigned char>((content_size >> shift) & 0xFFU));
+    }
+    for (const unsigned char byte : content) {
+        add_byte(byte);
     }
 
-    payload.append(content);
-    return sha256_hex(payload);
+    char output[16];
+    for (int i = 15; i >= 0; --i) {
+        output[i] = hex_digits[hash & 0x0FU];
+        hash >>= 4U;
+    }
+    return std::string(output, sizeof(output));
 }
 
 std::string hex_encode(const std::string& input) {
@@ -101,8 +98,8 @@ std::string hex_decode(const std::string& input) {
 }
 
 std::string normalize_digest(const std::string& digest) {
-    if (digest.size() != 64) {
-        throw std::runtime_error("A stored SHA-256 digest must contain 64 hex characters.");
+    if (digest.size() != 16) {
+        throw std::runtime_error("A stored FNV-1a 64-bit hash must contain 16 hex characters.");
     }
 
     std::string normalized = digest;
@@ -435,7 +432,7 @@ void MedKeep::save(const std::string& path) const {
     const std::vector<Request> pending = requests_.to_vector();
 
     std::ostringstream contents;
-    contents << "MEDKEEP\t1\n";
+    contents << "MEDKEEP\t2\n";
 
     for (const Record& record : records) {
         contents << "C\t" << record.id << '\t' << record.digest << '\t'
@@ -483,7 +480,7 @@ MedKeep MedKeep::load(const std::string& path) {
     if (!line.empty() && line.back() == '\r') {
         line.pop_back();
     }
-    if (line != "MEDKEEP\t1") {
+    if (line != "MEDKEEP\t2") {
         throw std::runtime_error("Unsupported or invalid MedKeep archive header.");
     }
 
