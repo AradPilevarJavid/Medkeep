@@ -1,10 +1,21 @@
+#project pdf
 *.pdf
 
+# Build artifacts
 build/
+cmake-build-*/
 
-medkeep.db
+# Generated database
+*.db
 
+# IDE
+.idea/
+.vscode/
 
-
+# Compiled files
+*.o
+*.a
+*.so
+*.exe
 
 
