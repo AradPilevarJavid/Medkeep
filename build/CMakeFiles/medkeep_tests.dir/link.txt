@@ -1,1 +1,0 @@
-/usr/bin/c++ -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/medkeep_tests.dir/link.d CMakeFiles/medkeep_tests.dir/tests/test_medkeep.cpp.o -o medkeep_tests  libmedkeep.a /usr/lib/libcrypto.so
