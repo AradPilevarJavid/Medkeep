@@ -1,12 +1,14 @@
 #include "application.hpp"
 #include "medkeep.hpp"
 
+#include <cstdint>
 #include <filesystem>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
-#include <utility>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace {
 
@@ -62,13 +64,9 @@ void save_safely(const medkeep::MedKeep& application, const std::string& path) {
 
 void print_menu() {
     std::cout << "\n========== MedKeep =========="
-              << "\n1. Queue a new medical record"
+              << "\n\n1. Add a new medical record"
               << "\n2. Process the oldest request"
-              << "\n3. Process all pending requests"
-              << "\n4. Verify the chain and extract records"
-              << "\n5. Display pending requests"
-              << "\n6. Save the archive"
-              << "\n7. Display statistics"
+              << "\n3. Verify and extract records"
               << "\n0. Save and exit\n";
 }
 
@@ -76,29 +74,13 @@ void print_menu() {
 
 namespace medkeep {
 
-int run_application(int argc, char* argv[]) {
-    std::string archive_path = "medkeep.db";
-    for (int i = 1; i < argc; ++i) {
-        const std::string argument = argv[i];
-        if (argument == "--file" && i + 1 < argc) {
-            archive_path = argv[++i];
-        } else if (argument == "--help") {
-            std::cout << "Usage: medkeep_cli [--file ARCHIVE_PATH]\n";
-            return 0;
-        } else {
-            std::cerr << "Unknown or incomplete argument: " << argument << '\n';
-            std::cerr << "Usage: medkeep_cli [--file ARCHIVE_PATH]\n";
-            return 1;
-        }
-    }
-
+int run_application() {
+    const std::string archive_path = "medkeep.db";
     medkeep::MedKeep application;
     if (std::filesystem::exists(archive_path)) {
         try {
             application = medkeep::MedKeep::load(archive_path);
-            std::cout << "Loaded " << application.record_count() << " committed record(s) and "
-                      << application.pending_count() << " pending request(s) from "
-                      << archive_path << ".\n";
+            std::cout << "Archive loaded successfully.\n";
         } catch (const std::exception& error) {
             std::cerr << "Could not load the archive: " << error.what() << '\n';
             return 1;
@@ -135,12 +117,6 @@ int run_application(int argc, char* argv[]) {
                     std::cout << "There are no pending requests.\n";
                 }
             } else if (choice == 3) {
-                const std::size_t processed = application.process_all();
-                std::cout << processed << " request(s) committed.\n";
-                if (processed > 0) {
-                    save_safely(application, archive_path);
-                }
-            } else if (choice == 4) {
                 std::string error;
                 const std::vector<medkeep::Record> records =
                     application.verify_and_extract(error);
@@ -155,23 +131,6 @@ int run_application(int argc, char* argv[]) {
                                   << record.content << '\n';
                     }
                 }
-            } else if (choice == 5) {
-                const std::vector<medkeep::Request> pending = application.pending_requests();
-                if (pending.empty()) {
-                    std::cout << "The request queue is empty.\n";
-                } else {
-                    std::cout << "Pending requests (oldest first):\n";
-                    for (const medkeep::Request& request : pending) {
-                        std::cout << "\nRequest #" << request.id << "\n"
-                                  << request.content << '\n';
-                    }
-                }
-            } else if (choice == 6) {
-                save_safely(application, archive_path);
-            } else if (choice == 7) {
-                std::cout << "Committed records: " << application.record_count()
-                          << "\nPending requests: " << application.pending_count()
-                          << "\nArchive: " << archive_path << '\n';
             } else if (choice == 0) {
                 save_safely(application, archive_path);
                 break;

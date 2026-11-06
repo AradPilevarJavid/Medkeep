@@ -177,8 +177,4 @@ std::vector<Record> LogChain::records_chronological() const {
     return newest_first;
 }
 
-std::size_t LogChain::size() const noexcept {
-    return record_count_;
-}
-
 }  // namespace medkeep

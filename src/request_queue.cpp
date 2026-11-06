@@ -11,13 +11,11 @@ void RequestQueue::clear() noexcept {
         head_ = std::move(next);
     }
     tail_ = nullptr;
-    size_ = 0;
 }
 
 RequestQueue::RequestQueue(RequestQueue&& other) noexcept
-    : head_(std::move(other.head_)), tail_(other.tail_), size_(other.size_) {
+    : head_(std::move(other.head_)), tail_(other.tail_) {
     other.tail_ = nullptr;
-    other.size_ = 0;
 }
 
 RequestQueue& RequestQueue::operator=(RequestQueue&& other) noexcept {
@@ -25,10 +23,8 @@ RequestQueue& RequestQueue::operator=(RequestQueue&& other) noexcept {
         clear();
         head_ = std::move(other.head_);
         tail_ = other.tail_;
-        size_ = other.size_;
 
         other.tail_ = nullptr;
-        other.size_ = 0;
     }
     return *this;
 }
@@ -44,7 +40,6 @@ void RequestQueue::enqueue(Request request) {
     }
 
     tail_ = new_tail;
-    ++size_;
 }
 
 std::optional<Request> RequestQueue::dequeue() {
@@ -54,8 +49,6 @@ std::optional<Request> RequestQueue::dequeue() {
 
     std::unique_ptr<QueueNode> first = std::move(head_);
     head_ = std::move(first->next);
-    --size_;
-
     if (!head_) {
         tail_ = nullptr;
     }
@@ -68,16 +61,11 @@ const Request* RequestQueue::front() const noexcept {
 }
 
 bool RequestQueue::empty() const noexcept {
-    return size_ == 0;
-}
-
-std::size_t RequestQueue::size() const noexcept {
-    return size_;
+    return head_ == nullptr;
 }
 
 std::vector<Request> RequestQueue::to_vector() const {
     std::vector<Request> result;
-    result.reserve(size_);
 
     const QueueNode* current = head_.get();
     while (current != nullptr) {

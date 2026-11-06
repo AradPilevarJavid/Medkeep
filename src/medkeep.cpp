@@ -4,11 +4,13 @@
 #include <filesystem>
 #include <fstream>
 #include <limits>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <system_error>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 namespace medkeep {
 namespace {
@@ -134,28 +136,8 @@ bool MedKeep::process_next() {
     return removed.has_value();
 }
 
-std::size_t MedKeep::process_all() {
-    std::size_t processed = 0;
-    while (process_next()) {
-        ++processed;
-    }
-    return processed;
-}
-
 std::vector<Record> MedKeep::verify_and_extract(std::string& error) const {
     return chain_.verify_and_extract(error);
-}
-
-std::vector<Request> MedKeep::pending_requests() const {
-    return requests_.to_vector();
-}
-
-std::size_t MedKeep::record_count() const noexcept {
-    return chain_.size();
-}
-
-std::size_t MedKeep::pending_count() const noexcept {
-    return requests_.size();
 }
 
 void MedKeep::save(const std::string& path) const {

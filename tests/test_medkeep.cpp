@@ -46,7 +46,6 @@ void test_empty_chain() {
     const auto records = application.verify_and_extract(error);
     require(error.empty());
     require(records.empty());
-    require(application.record_count() == 0);
 }
 
 void test_fifo_and_hash_chain() {
@@ -54,13 +53,11 @@ void test_fifo_and_hash_chain() {
     require(application.enqueue_request("first patient") == 1);
     require(application.enqueue_request("second patient") == 2);
     require(application.enqueue_request("third patient") == 3);
-    require(application.pending_count() == 3);
 
     require(application.process_next());
     require(application.process_next());
     require(application.process_next());
     require(!application.process_next());
-    require(application.pending_count() == 0);
 
     std::string error;
     const auto records = application.verify_and_extract(error);
@@ -73,21 +70,20 @@ void test_fifo_and_hash_chain() {
     require(records[0].digest.size() == 16);
 }
 
-void test_queue_preserves_fifo_order() {
+void test_queue_processes_fifo_order_one_at_a_time() {
     medkeep::MedKeep application;
-    for (int i = 0; i < 150; ++i) {
-        const auto id = application.enqueue_request("record-" + std::to_string(i));
-        require(id == static_cast<std::uint64_t>(i + 1));
-    }
+    require(application.enqueue_request("first") == 1);
+    require(application.enqueue_request("second") == 2);
+    require(application.enqueue_request("third") == 3);
 
-    const auto pending = application.pending_requests();
-    require(pending.size() == 150);
-    for (int i = 0; i < 150; ++i) {
-        require(pending[static_cast<std::size_t>(i)].id ==
-               static_cast<std::uint64_t>(i + 1));
-        require(pending[static_cast<std::size_t>(i)].content ==
-               "record-" + std::to_string(i));
+    for (const std::string expected : {"first", "second", "third"}) {
+        require(application.process_next());
+        std::string error;
+        const auto records = application.verify_and_extract(error);
+        require(error.empty());
+        require(records.back().content == expected);
     }
+    require(!application.process_next());
 }
 
 void test_persistence_includes_pending_requests() {
@@ -103,14 +99,9 @@ void test_persistence_includes_pending_requests() {
     application.save(path.string());
 
     medkeep::MedKeep loaded = medkeep::MedKeep::load(path.string());
-    require(loaded.record_count() == 1);
-    require(loaded.pending_count() == 2);
-
-    const auto pending = loaded.pending_requests();
-    require(pending[0].content == "pending one");
-    require(pending[1].content == "pending two");
-
-    require(loaded.process_all() == 2);
+    require(loaded.process_next());
+    require(loaded.process_next());
+    require(!loaded.process_next());
     std::string error;
     const auto records = loaded.verify_and_extract(error);
     require(error.empty());
@@ -172,7 +163,8 @@ void test_multiline_utf8_and_empty_content_persist() {
     const std::string multilingual = "بیمار\tاول\nMedication: café";
     require(application.enqueue_request(multilingual) == 1);
     require(application.enqueue_request("") == 2);
-    require(application.process_all() == 2);
+    require(application.process_next());
+    require(application.process_next());
     application.save(path.string());
 
     medkeep::MedKeep loaded = medkeep::MedKeep::load(path.string());
@@ -233,7 +225,7 @@ int main() {
     test_old_archive_version_is_rejected();
     test_empty_chain();
     test_fifo_and_hash_chain();
-    test_queue_preserves_fifo_order();
+    test_queue_processes_fifo_order_one_at_a_time();
     test_persistence_includes_pending_requests();
     test_tampering_is_detected();
     test_multiline_utf8_and_empty_content_persist();

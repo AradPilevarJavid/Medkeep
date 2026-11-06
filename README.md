@@ -5,7 +5,7 @@ MedKeep is an offline medical-record logging application written in C++17. It im
 ## Source layout
 
 - `src/main.cpp` contains only the C++ entry point and delegates to `run_application`.
-- `src/application.hpp` and `src/application.cpp` contain command-line handling, the menu, input/output, and application-level error handling.
+- `src/application.hpp` and `src/application.cpp` contain the menu, input/output, and application-level error handling.
 - `src/medkeep.hpp` and `src/medkeep.cpp` coordinate the application and contain archive persistence.
 - `src/log_chain.hpp` and `src/log_chain.cpp` implement the manual linked hash chain and its private FNV-1a hashing.
 - `src/request_queue.hpp` and `src/request_queue.cpp` implement the manual FIFO request queue.
@@ -80,24 +80,16 @@ Run the application:
 ./build/medkeep_cli
 ```
 
-A different archive path can be selected with:
-
-```bash
-./build/medkeep_cli --file hospital_records.db
-```
-
 The default archive is `medkeep.db` in the current working directory. The application loads it at startup when it exists and automatically saves after queue and processing operations. To enter a multi-line record, type its lines and finish with a line containing `.end` by itself.
 
 ## Menu
 
 ```text
-1. Queue a new medical record
+========== MedKeep ==========
+
+1. Add a new medical record
 2. Process the oldest request
-3. Process all pending requests
-4. Verify the chain and extract records
-5. Display pending requests
-6. Save the archive
-7. Display statistics
+3. Verify and extract records
 0. Save and exit
 ```
 
@@ -111,7 +103,6 @@ Let `n` be the number of committed records and `q` the number of pending request
 | Remove oldest request | O(1) |
 | Commit one record | O(1) hash-chain insertion, plus O(content length) hashing |
 | Verify and extract all records | O(total stored content bytes + n) |
-| List pending requests | O(q) |
 | Save or load archive | O(total archive size) |
 
 Each record adds two linked-list nodes. The record node points to the previous hash node; its following hash node stores the digest for that record. While traversing backward from the head, the record nodes occupy the even positions (2nd, 4th, 6th, ...).

@@ -1,7 +1,6 @@
 #ifndef MEDKEEP_REQUEST_QUEUE_HPP
 #define MEDKEEP_REQUEST_QUEUE_HPP
 
-#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -29,7 +28,6 @@ public:
     std::optional<Request> dequeue();
     [[nodiscard]] const Request* front() const noexcept;
     [[nodiscard]] bool empty() const noexcept;
-    [[nodiscard]] std::size_t size() const noexcept;
     [[nodiscard]] std::vector<Request> to_vector() const;
 
 private:
@@ -40,7 +38,6 @@ private:
     };
     std::unique_ptr<QueueNode> head_;
     QueueNode* tail_ = nullptr;
-    std::size_t size_ = 0;
     void clear() noexcept;
 };
 

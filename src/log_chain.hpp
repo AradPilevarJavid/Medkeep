@@ -28,7 +28,6 @@ public:
     void append(std::uint64_t id, const std::string& content);
     [[nodiscard]] std::vector<Record> verify_and_extract(std::string& error) const;
     [[nodiscard]] std::vector<Record> records_chronological() const;
-    [[nodiscard]] std::size_t size() const noexcept;
 
 private:
     enum class NodeKind { Record, Hash };
