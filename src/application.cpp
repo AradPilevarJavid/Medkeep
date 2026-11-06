@@ -2,6 +2,7 @@
 #include "medkeep.hpp"
 
 #include <cstdint>
+#include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <limits>
@@ -70,6 +71,16 @@ void print_menu() {
               << "\n0. Save and exit\n";
 }
 
+void clear_screen() {
+    std::system("clear");
+}
+
+bool wait_for_enter() {
+    std::cout << "\nPress Enter to continue...";
+    std::string line;
+    return static_cast<bool>(std::getline(std::cin, line));
+}
+
 }  // namespace
 
 namespace medkeep {
@@ -89,6 +100,7 @@ int run_application() {
         std::cout << "No existing archive found. A new MedKeep chain will be created.\n";
     }
 
+    clear_screen();
     while (true) {
         print_menu();
         int choice = -1;
@@ -137,8 +149,14 @@ int run_application() {
             } else {
                 std::cout << "Unknown menu option.\n";
             }
+            if (wait_for_enter()) {
+                clear_screen();
+            }
         } catch (const std::exception& error) {
             std::cout << "Operation failed: " << error.what() << '\n';
+            if (wait_for_enter()) {
+                clear_screen();
+            }
         }
     }
 
