@@ -18,4 +18,6 @@ cmake-build-*/
 *.so
 *.exe
 
+# ccp files
+project.md
 
