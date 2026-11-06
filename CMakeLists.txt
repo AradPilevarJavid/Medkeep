@@ -5,11 +5,15 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_library(medkeep src/medkeep.cpp)
+add_library(medkeep
+    src/medkeep.cpp
+    src/log_chain.cpp
+    src/request_queue.cpp
+)
 target_include_directories(medkeep PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_compile_options(medkeep PRIVATE -Wall -Wextra -Wpedantic)
 
-add_executable(medkeep_cli src/main.cpp)
+add_executable(medkeep_cli src/main.cpp src/application.cpp)
 target_link_libraries(medkeep_cli PRIVATE medkeep)
 target_compile_options(medkeep_cli PRIVATE -Wall -Wextra -Wpedantic)
 
@@ -20,4 +24,3 @@ if(BUILD_TESTING)
     target_compile_options(medkeep_tests PRIVATE -Wall -Wextra -Wpedantic)
     add_test(NAME medkeep_tests COMMAND medkeep_tests)
 endif()
-

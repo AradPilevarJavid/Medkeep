@@ -2,6 +2,14 @@
 
 MedKeep is an offline medical-record logging application written in C++17. It implements the data structures required by Project 1 without using a ready-made linked list or queue.
 
+## Source layout
+
+- `src/main.cpp` contains only the C++ entry point and delegates to `run_application`.
+- `src/application.hpp` and `src/application.cpp` contain command-line handling, the menu, input/output, and application-level error handling.
+- `src/medkeep.hpp` and `src/medkeep.cpp` coordinate the application and contain archive persistence.
+- `src/log_chain.hpp` and `src/log_chain.cpp` implement the manual linked hash chain and its private FNV-1a hashing.
+- `src/request_queue.hpp` and `src/request_queue.cpp` implement the manual FIFO request queue.
+
 ## Implemented requirements
 
 1. **Singly linked hash chain**
