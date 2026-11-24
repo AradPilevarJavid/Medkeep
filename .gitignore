@@ -21,3 +21,13 @@ cmake-build-*/
 # ccp files
 project.md
 
+# Web GUI
+node_modules/
+web/dist/
+web/coverage/
+web/.vite/
+web/test-results/
+web/playwright-report/
+web/blob-report/
+web/.playwright/
+

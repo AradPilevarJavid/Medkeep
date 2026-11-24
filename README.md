@@ -114,3 +114,7 @@ A hash chain detects content changes when the stored subsequent hashes are left 
 ## Interpretation of the mutable-node note
 
 The brief mentions that some content nodes may remain mutable until another request is registered, while the verification section says that content nodes are the even-positioned nodes during reverse traversal and should be displayed after verification. MedKeep keeps unprocessed requests in the separate FIFO queue and adds a record to the chain only when it can create the matching hash node as well. This avoids leaving an unhashed record in the committed chain; every record returned by extraction has passed verification.
+# GUI
+
+The `web/` directory contains an offline, browser-based dashboard for MedKeep archives. See [web/README.md](web/README.md) for setup, privacy limitations, and testing.
+
