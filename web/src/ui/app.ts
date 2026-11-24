@@ -152,30 +152,22 @@ export function createApp(options: AppOptions): App {
       }
     };
 
-    if (state.records.length > 0 || state.pending.length > 0) {
-      confirmDialog.open(
-        {
-          title: 'Replace the current ledger with demo data?',
-          body: 'Your current records and queue will be replaced. Export first if you need a copy.',
-          confirmLabel: 'Load demo data',
-          tone: 'danger',
-          onConfirm: apply,
-        },
-        null,
-      );
-      return;
-    }
-
-    apply();
+    const hasData = state.records.length > 0 || state.pending.length > 0;
+    confirmDialog.open(
+      {
+        title: hasData ? 'Replace the current ledger with demo data?' : 'Load demo data?',
+        body: hasData
+          ? 'Your current records and queue will be replaced. Export first if you need a copy.'
+          : 'Load fictional records and requests into this browser.',
+        confirmLabel: 'Load demo data',
+        tone: hasData ? 'danger' : 'primary',
+        onConfirm: apply,
+      },
+      null,
+    );
   }
 
   function onClear(): void {
-    const state = getState();
-    if (state.records.length === 0 && state.pending.length === 0) {
-      toast('There is nothing to clear.', 'info');
-      return;
-    }
-
     confirmDialog.open(
       {
         title: 'Clear all local data?',
@@ -376,7 +368,12 @@ export function createApp(options: AppOptions): App {
     integrityPanel.update(verificationView);
   }
 
-  subscribe(render);
+  subscribe((state) => {
+    if (cachedState !== null && cachedState.records !== state.records) {
+      verificationView = null;
+    }
+    render();
+  });
   render();
 
   if (options.initialError.length > 0) {

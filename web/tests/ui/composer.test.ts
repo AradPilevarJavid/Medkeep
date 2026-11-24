@@ -32,14 +32,14 @@ describe('composer', () => {
     document.body.append(composer.node);
 
     const textarea = composer.node.querySelector('textarea')!;
-    textarea.value = ' ';
+    textarea.value = 'valid';
     submit(composer.node);
 
     const error = composer.node.querySelector<HTMLElement>('.field-error')!;
     expect(error.hidden).toBe(false);
     expect(error.textContent).toMatch(/Enter a record/);
     expect(textarea.getAttribute('aria-invalid')).toBe('true');
-    expect(textarea.value).toBe(' ');
+    expect(textarea.value).toBe('valid');
   });
 
   it('updates the character counter', () => {
@@ -50,5 +50,18 @@ describe('composer', () => {
     textarea.dispatchEvent(new Event('input', { bubbles: true }));
 
     expect(composer.node.querySelector('.composer__counter')?.textContent).toBe('4 / 20,000');
+  });
+
+  it('enables submission only for nonblank content', () => {
+    const composer = createComposer({ onAdd: vi.fn() });
+    const textarea = composer.node.querySelector('textarea')!;
+    const button = composer.node.querySelector('button')!;
+    expect(button.disabled).toBe(true);
+    textarea.value = 'fictional record';
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(button.disabled).toBe(false);
+    textarea.value = '  ';
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(button.disabled).toBe(true);
   });
 });

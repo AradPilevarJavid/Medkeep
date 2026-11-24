@@ -8,7 +8,7 @@ import { parseArchive, serializeArchive, type ParsedArchive } from '../domain/ar
 import { appendRecord, verifyRecords } from '../domain/chain';
 import { createSeedState } from '../domain/seed';
 import type { DashboardState, PendingRequest, RecordEntry, Verification } from '../domain/types';
-import { loadState, saveState } from './storage';
+import { clearState, loadState, saveState } from './storage';
 
 export const MAX_CONTENT_LENGTH = 20_000;
 
@@ -79,7 +79,7 @@ export function addRequest(rawContent: string): PendingRequest {
   if (content.length > MAX_CONTENT_LENGTH) {
     throw new Error(`Records are limited to ${MAX_CONTENT_LENGTH.toLocaleString()} characters.`);
   }
-  if (!Number.isSafeInteger(state.nextId) || state.nextId <= 0) {
+  if (!Number.isSafeInteger(state.nextId + 1) || state.nextId <= 0) {
     throw new Error('The request ID range has been exhausted.');
   }
 
@@ -151,6 +151,9 @@ export function loadSeed(): void {
 }
 
 export function resetAll(): void {
+  if (memoryOnly) {
+    clearState();
+  }
   commit(createEmptyState());
 }
 

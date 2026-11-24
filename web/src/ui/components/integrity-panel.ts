@@ -18,7 +18,7 @@ export interface IntegrityPanel {
 }
 
 export function createIntegrityPanel(options: IntegrityOptions): IntegrityPanel {
-  const message = el('div', { class: 'integrity__message' });
+  const message = el('div', { class: 'integrity__message', 'aria-live': 'polite' });
   const verifyButton = el(
     'button',
     { class: 'button button--primary', type: 'button', onclick: options.onVerify },

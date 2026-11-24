@@ -1,6 +1,6 @@
 # MedKeep GUI — Implementation Plan
 
-Status: approved, in progress
+Status: approved, in progress (audit updated 2026-11-24)
 Branch: `gui`
 Worktree: `/home/arad/myprojects/Medkeep.worktrees/gui`
 
@@ -296,3 +296,14 @@ All gates must pass before completion.
 - **OKLCH support** — acceptable for modern browsers; document the floor.
 - **URL-synced search** — keep only if it stays simple; drop otherwise.
 - **TypeScript 6.0** — pinned below 6.1 because typescript-eslint does not yet accept 6.1+/7.x.
+
+## 18. Implementation audit
+
+The dashboard, persistence, archive flow, themes, Pages workflow and quality commands are implemented. Automated tests cover the main ledger journey, demo confirmation, invalid imports, keyboard entry, 320px reflow, theme persistence and axe checks in both themes. The light primary color was darkened from the original token to meet text contrast.
+
+Remaining work before the full definition of done can be claimed:
+
+- Complete manual keyboard, focus, 400% zoom, contrast and reduced-motion checks across all dialog and error states.
+- Measure LCP and INP on a representative mobile profile and verify Pages assets and CSP in a deployed project-subpath site.
+- Finish the planned typed-result API, immutable chain array, render coalescing, full copy centralization, and the remaining component and boundary tests.
+- Review storage recovery and unavailable-storage behavior in all failure states, including failures after startup.

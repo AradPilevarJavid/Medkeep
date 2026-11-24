@@ -50,6 +50,7 @@ export function createComposer(options: ComposerOptions): Composer {
     const length = textarea.value.length;
     counter.textContent = `${length.toLocaleString()} / ${MAX_CONTENT_LENGTH.toLocaleString()}`;
     counter.dataset.state = length > MAX_CONTENT_LENGTH ? 'error' : 'ok';
+    submit.disabled = textarea.value.trim().length === 0 || length > MAX_CONTENT_LENGTH;
   }
 
   function setError(message: string | null): void {
@@ -66,6 +67,10 @@ export function createComposer(options: ComposerOptions): Composer {
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
+    if (textarea.value.trim().length === 0 || textarea.value.length > MAX_CONTENT_LENGTH) {
+      setError('Enter a record within the character limit.');
+      return;
+    }
     try {
       options.onAdd(textarea.value);
     } catch (thrown) {

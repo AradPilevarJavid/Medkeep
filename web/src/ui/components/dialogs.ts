@@ -21,8 +21,9 @@ export function createImportDialog(options: ImportOptions): ImportDialog {
     class: 'field-input',
     type: 'file',
     accept: '.db,.txt,text/plain',
+    'aria-describedby': 'import-error',
   });
-  const error = el('p', { class: 'field-error', role: 'alert', hidden: true });
+  const error = el('p', { id: 'import-error', class: 'field-error', role: 'alert', hidden: true });
 
   const cancel = el(
     'button',
@@ -56,11 +57,13 @@ export function createImportDialog(options: ImportOptions): ImportDialog {
   function showError(message: string): void {
     error.hidden = false;
     error.textContent = message;
+    fileInput.setAttribute('aria-invalid', 'true');
   }
 
   async function submitFile(): Promise<void> {
     error.hidden = true;
     error.textContent = '';
+    fileInput.removeAttribute('aria-invalid');
 
     const file = fileInput.files?.[0];
     if (!file) {
@@ -100,6 +103,7 @@ export function createImportDialog(options: ImportOptions): ImportDialog {
     open(trigger) {
       error.hidden = true;
       error.textContent = '';
+      fileInput.removeAttribute('aria-invalid');
       fileInput.value = '';
       openDialog(dialog, trigger);
     },
