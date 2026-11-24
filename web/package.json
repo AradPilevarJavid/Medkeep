@@ -22,7 +22,7 @@
     "check": "npm run typecheck && npm run lint && npm run format:check && npm run test && npm run build"
   },
   "dependencies": {
-    "zod": "4.6.7"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
